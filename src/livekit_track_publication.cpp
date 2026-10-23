@@ -1,4 +1,5 @@
 #include "livekit_track_publication.h"
+#include "livekit_ffi_raw.h"
 
 #include <godot_cpp/variant/utility_functions.hpp>
 
@@ -115,7 +116,14 @@ void LiveKitRemoteTrackPublication::_bind_methods() {
     ClassDB::bind_method(D_METHOD("get_subscribed"), &LiveKitRemoteTrackPublication::get_subscribed);
     ClassDB::bind_method(D_METHOD("set_subscribed", "subscribed"), &LiveKitRemoteTrackPublication::set_subscribed);
 
+    ClassDB::bind_method(D_METHOD("set_video_quality", "quality"), &LiveKitRemoteTrackPublication::set_video_quality);
+    ClassDB::bind_method(D_METHOD("set_video_dimensions", "size"), &LiveKitRemoteTrackPublication::set_video_dimensions);
+
     ADD_PROPERTY(PropertyInfo(Variant::BOOL, "subscribed"), "set_subscribed", "get_subscribed");
+
+    BIND_ENUM_CONSTANT(VIDEO_QUALITY_LOW);
+    BIND_ENUM_CONSTANT(VIDEO_QUALITY_MEDIUM);
+    BIND_ENUM_CONSTANT(VIDEO_QUALITY_HIGH);
 }
 
 LiveKitRemoteTrackPublication::LiveKitRemoteTrackPublication() {
@@ -141,4 +149,22 @@ void LiveKitRemoteTrackPublication::set_subscribed(bool subscribed) {
             remote_pub->setSubscribed(subscribed);
         }
     }
+}
+
+// Which simulcast layer the server sends this subscriber (LOW is the publisher's smallest -- a tile's worth). Only a
+// simulcasted video track has layers; on any other it does nothing.
+bool LiveKitRemoteTrackPublication::set_video_quality(int quality) {
+    if (!publication_ || quality < VIDEO_QUALITY_LOW || quality > VIDEO_QUALITY_HIGH) {
+        return false;
+    }
+    return godot_livekit_ffi::set_quality(publication_->ffiHandleId(), quality);
+}
+
+// The size this video is drawn at, in pixels: the server picks the smallest layer that covers it (and sends nothing
+// bigger), and follows it as the tile grows or shrinks.
+bool LiveKitRemoteTrackPublication::set_video_dimensions(const Vector2i &size) {
+    if (!publication_ || size.x <= 0 || size.y <= 0) {
+        return false;
+    }
+    return godot_livekit_ffi::set_dimension(publication_->ffiHandleId(), (uint32_t)size.x, (uint32_t)size.y);
 }

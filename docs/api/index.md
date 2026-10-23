@@ -182,6 +182,14 @@ Represents a track published by a remote participant.
 **Methods:**
 *   `get_subscribed() -> bool`: Returns whether the local participant is subscribed to this track.
 *   `set_subscribed(subscribed: bool)`: Subscribes or unsubscribes from this track.
+*   `set_video_quality(quality: int) -> bool`: For a simulcasted video track, which layer the server sends:
+    `VIDEO_QUALITY_LOW` (0), `VIDEO_QUALITY_MEDIUM` (1) or `VIDEO_QUALITY_HIGH` (2).
+*   `set_video_dimensions(size: Vector2i) -> bool`: The size the video is drawn at, in pixels; the server sends the
+    smallest layer that covers it, and follows it when it changes.
+
+    Measured (M1 MacBook Air, 12 simulcast 720p cameras drawn as 160x90 tiles over a busy 3D scene): the default top
+    layer arrives at 1280x720 and only ~5 frames a second get through in total, +5-6 ms a frame; `VIDEO_QUALITY_LOW`
+    plus `set_video_dimensions(Vector2i(160, 90))` brings 320x180 at ~14 fps per camera for +0.4 ms.
 
 ---
 

@@ -4,6 +4,7 @@
 #include <godot_cpp/classes/ref_counted.hpp>
 #include <godot_cpp/core/class_db.hpp>
 #include <godot_cpp/variant/string.hpp>
+#include <godot_cpp/variant/vector2i.hpp>
 
 #include <livekit/track_publication.h>
 #include <livekit/local_track_publication.h>
@@ -58,13 +59,24 @@ protected:
     static void _bind_methods();
 
 public:
+    enum VideoQuality {
+        VIDEO_QUALITY_LOW = 0,
+        VIDEO_QUALITY_MEDIUM = 1,
+        VIDEO_QUALITY_HIGH = 2,
+    };
+
     LiveKitRemoteTrackPublication();
     ~LiveKitRemoteTrackPublication();
 
     bool get_subscribed() const;
     void set_subscribed(bool subscribed);
+
+    bool set_video_quality(int quality);
+    bool set_video_dimensions(const Vector2i &size);
 };
 
 }
+
+VARIANT_ENUM_CAST(godot::LiveKitRemoteTrackPublication::VideoQuality);
 
 #endif // GODOT_LIVEKIT_TRACK_PUBLICATION_H
