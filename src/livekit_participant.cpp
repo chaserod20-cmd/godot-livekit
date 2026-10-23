@@ -236,7 +236,21 @@ Ref<LiveKitLocalTrackPublication> LiveKitLocalParticipant::publish_track(const R
     if (options.has("source")) {
         pub_options.source = (livekit::TrackSource)(int)options["source"];
     }
-    // video_codec is a VideoCodec enum in the SDK - not easily set from string
+    // video_codec: "vp8", "h264", "av1", "vp9" or "h265" (the FFI's VideoCodec numbering, video_frame.proto). H.264 is
+    // the one most machines encode in hardware.
+    if (options.has("video_codec")) {
+        String c = String(options["video_codec"]).to_lower();
+        int v = c == "h264" ? 1 : c == "av1" ? 2 : c == "vp9" ? 3 : c == "h265" ? 4 : 0;
+        pub_options.video_codec = (livekit::VideoCodec)v;
+    }
+    // max_bitrate (bits a second) and max_framerate: the encoder's ceiling. Only with a bitrate: an encoding of 0 bps
+    // sends nothing at all (a non-simulcast track has no layer presets to fall back on)
+    if (options.has("max_bitrate") && (int64_t)options["max_bitrate"] > 0) {
+        livekit::VideoEncodingOptions enc;
+        enc.max_bitrate = (uint64_t)(int64_t)options["max_bitrate"];
+        enc.max_framerate = (double)options.get("max_framerate", 30.0);
+        pub_options.video_encoding = enc;
+    }
 
     auto native_pub = local_participant_->publishTrack(native_track, pub_options);
     if (!native_pub) {
