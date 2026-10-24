@@ -119,6 +119,16 @@ else:
     elif platform == 'linux':
         env.Append(LINKFLAGS=['-Wl,-rpath,\\$$ORIGIN'])
 
+# OPTIMISED, a release build at least (2026-10-23, the hiso fork). Nothing set it, so every compiler ran at -O0: a
+# profile of 11 remote cameras in a Godot game showed the main thread ~37% inside LiveKitVideoSource::capture_frame
+# and LiveKitVideoStream::poll copying and freeing frame bytes ONE BYTE AT A TIME (std::vector's element loops, which
+# -O2 turns into memcpy / nothing), and every stream's reader thread busy the same way.
+if target == 'template_release':
+    if is_windows and not use_mingw:
+        env.Append(CCFLAGS=['/O2'], CPPDEFINES=['NDEBUG'])
+    else:
+        env.Append(CCFLAGS=['-O2'], CPPDEFINES=['NDEBUG'])
+
 if is_windows and not use_mingw:
     lib_ext = '.lib'
     lib_prefix = 'lib' # Prebuilt zip has 'lib' prefix even for MSVC .lib file
